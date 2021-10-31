@@ -186,7 +186,7 @@ def get_vectors(minzoom, maxzoom, x, y, style, vec, extent, locales):
     groupby_all = ",".join([('"%s"' % name if name in column_names_needed else 'null as "%s"' % name) for name in column_names_all])
 
     if not select:
-        return "select "
+        return "select null as way"
 
     if vec == "polygon":
         coastline_query = """select ST_AsMVTGeom(geom, ST_TileEnvelope(%s, %s, %s), %s, 64, true) as way, %s from
@@ -341,8 +341,8 @@ def basemap_sql(minzoom, maxzoom, extent, style, options):
         get_vectors(
             minzoom,
             maxzoom,
+            "$1",
             "$2",
-            "$3",
             style,
             "polygon",
             extent,
@@ -352,8 +352,8 @@ def basemap_sql(minzoom, maxzoom, extent, style, options):
         get_vectors(
             minzoom,
             maxzoom,
+            "$1",
             "$2",
-            "$3",
             style,
             "line",
             extent,
@@ -363,8 +363,8 @@ def basemap_sql(minzoom, maxzoom, extent, style, options):
         get_vectors(
             minzoom,
             maxzoom,
+            "$1",
             "$2",
-            "$3",
             style,
             "point",
             extent,
@@ -386,40 +386,41 @@ def komap_mvt_sql(options, style):
                 osm2pgsql_avail_keys[line[1]] = tuple(line[0].split(","))
         osm2pgsql_avail_keys["tags"] = ("node", "way")
 
-    print(
-        """select
-        case when $1 = 0 then %s
-             when $1 = 1 then %s
-             when $1 = 2 then %s
-             when $1 = 3 then %s
-             when $1 = 4 then %s
-             when $1 = 5 then %s
-             when $1 = 6 then %s
-             when $1 = 7 then %s
-             when $1 = 8 then %s
-             when $1 = 9 then %s
-             when $1 = 10 then %s
-             when $1 = 11 then %s
-             when $1 = 12 then %s
-             when $1 = 13 then %s
-             when $1 = 14 then %s
-             else null
-        end"""
-        % (
-            basemap_sql(0, 0, 4096, style, options),
-            basemap_sql(1, 1, 4096, style, options),
-            basemap_sql(2, 2, 4096, style, options),
-            basemap_sql(3, 3, 4096, style, options),
-            basemap_sql(4, 4, 4096, style, options),
-            basemap_sql(5, 5, 4096, style, options),
-            basemap_sql(6, 6, 4096, style, options),
-            basemap_sql(7, 7, 4096, style, options),
-            basemap_sql(8, 8, 4096, style, options),
-            basemap_sql(9, 9, 4096, style, options),
-            basemap_sql(10, 10, 4096, style, options),
-            basemap_sql(11, 11, 4096, style, options),
-            basemap_sql(12, 12, 4096, style, options),
-            basemap_sql(13, 13, 4096, style, options),
-            basemap_sql(14, 23, 8192, style, options),
-        )
-    )
+    print("""select %s""" % (basemap_sql(options.minzoom, options.maxzoom, 4096 if options.minzoom <= 13 else 8192, style, options)))
+    # print(
+    #     """select
+    #     case when $1 = 0 then %s
+    #          when $1 = 1 then %s
+    #          when $1 = 2 then %s
+    #          when $1 = 3 then %s
+    #          when $1 = 4 then %s
+    #          when $1 = 5 then %s
+    #          when $1 = 6 then %s
+    #          when $1 = 7 then %s
+    #          when $1 = 8 then %s
+    #          when $1 = 9 then %s
+    #          when $1 = 10 then %s
+    #          when $1 = 11 then %s
+    #          when $1 = 12 then %s
+    #          when $1 = 13 then %s
+    #          when $1 = 14 then %s
+    #          else null
+    #     end"""
+    #     % (
+    #         basemap_sql(0, 0, 4096, style, options),
+    #         basemap_sql(1, 1, 4096, style, options),
+    #         basemap_sql(2, 2, 4096, style, options),
+    #         basemap_sql(3, 3, 4096, style, options),
+    #         basemap_sql(4, 4, 4096, style, options),
+    #         basemap_sql(5, 5, 4096, style, options),
+    #         basemap_sql(6, 6, 4096, style, options),
+    #         basemap_sql(7, 7, 4096, style, options),
+    #         basemap_sql(8, 8, 4096, style, options),
+    #         basemap_sql(9, 9, 4096, style, options),
+    #         basemap_sql(10, 10, 4096, style, options),
+    #         basemap_sql(11, 11, 4096, style, options),
+    #         basemap_sql(12, 12, 4096, style, options),
+    #         basemap_sql(13, 13, 4096, style, options),
+    #         basemap_sql(14, 23, 8192, style, options),
+    #     )
+    # )
